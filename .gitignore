@@ -1,0 +1,17 @@
+# Ignore all
+*.swp
+
+# Unignore all cpp sources and headers.
+!*.cpp
+!*.h
+
+# Unignore all directories and makefiles.
+!*/
+!makefile
+
+!.gitignore
+
+# Ignore the temporary test file.
+temp_test.cpp
+
+
