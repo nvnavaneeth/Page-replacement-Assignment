@@ -20,3 +20,14 @@ Testing parameters:
 Run the test_algos.cpp file to generate the results: result_fault_count.csv and result_avg_run_time.csv. To plot the results, run plot_results.py. A sample graph is shown below
 
 ![alt-text](/graphs/fault_count_npages_30.png)
+
+### Discussion
+Page fault count:
+- The page fault rate of Counter and stack implementations were identical, as expected. 
+- The aging register results were slightly different because multiple pages could be read within the same tick and this could lead to multiple pages havin the same register value.
+- Second chance algorithm also performed nearly as good as the exact implementations.
+
+Algorithm run time:
+- Exact implementations require search of the entire page list before replacing one, hence it was expected of them to take more run time. All the exact implementations have atleast a time complexity of O(num_frames) in case of replacements. The second chance algorithm does better because the entire table need no be searched.
+- In terms of run time, the second chance algorithms appears to scale better with number of frames.
+..
