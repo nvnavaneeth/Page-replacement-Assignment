@@ -5,6 +5,8 @@
 !*.cpp
 !*.h
 
+!*.py
+!*.png
 # Unignore all directories and makefiles.
 !*/
 !makefile

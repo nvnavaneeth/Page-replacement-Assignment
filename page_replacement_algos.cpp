@@ -10,7 +10,7 @@ using namespace chrono;
 
 //--------------------------- LRU Counter -------------------------------------
 void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
-    int& fault_count, int& avg_read_time) {
+    int& fault_count, int& avg_run_time_ns) {
   // List of pages in memory.
   int* page_list = new int[num_frames];
   // Reference count of corresponding page in page_list.
@@ -21,7 +21,7 @@ void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
   int clock_time = 0;
 
   fault_count = 0;
-  avg_read_time = 0;
+  avg_run_time_ns = 0;
   auto start_time = chrono::high_resolution_clock::now();
   for (int page_num : sequence) {
     // Check if page is already in page_list.
@@ -62,7 +62,7 @@ void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
   }
   auto end_time = high_resolution_clock::now();
   auto duration = duration_cast<nanoseconds>(end_time - start_time);
-  avg_read_time = duration.count() / float(sequence.size());
+  avg_run_time_ns = duration.count() / float(sequence.size());
 
   delete[] page_list;
   delete[] counter;
@@ -71,12 +71,12 @@ void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
 
 //---------------------------- LRU Stack --------------------------------------
 void ReadSequenceLRUStack(const vector<int>& sequence, const int num_frames,
-    int& fault_count, int& avg_read_time) {
+    int& fault_count, int& avg_run_time_ns) {
   // List of pages in memory.
   list<int> page_list;
 
   fault_count = 0;
-  avg_read_time = 0;
+  avg_run_time_ns = 0;
   auto start_time = chrono::high_resolution_clock::now();
   for (int page_num : sequence) {
     // Check if page is already in page_list.
@@ -110,13 +110,13 @@ void ReadSequenceLRUStack(const vector<int>& sequence, const int num_frames,
   }
   auto end_time = high_resolution_clock::now();
   auto duration = duration_cast<nanoseconds>(end_time - start_time);
-  avg_read_time = duration.count() / float(sequence.size());
+  avg_run_time_ns = duration.count() / float(sequence.size());
 }
 //-----------------------------------------------------------------------------
 
 //---------------------------- LRU Aging --------------------------------------
 void ReadSequenceLRUAging(const vector<int>& sequence, const int num_frames,
-    int& fault_count, int& avg_read_time) {
+    int& fault_count, int& avg_run_time_ns) {
   // List of pages in already in memory.
   int* page_list = new int[num_frames];
   // Array representing aging register of corresponding page in page_list.
@@ -127,7 +127,8 @@ void ReadSequenceLRUAging(const vector<int>& sequence, const int num_frames,
   const int tick_interval = 5;
 
   fault_count = 0;
-  avg_read_time = 0;
+  avg_run_time_ns = 0;
+  auto start_time = chrono::high_resolution_clock::now();
   for (int page_num : sequence ) {
     // Simulate the delay between page accesses.
     int delay = rand() % 11;
@@ -137,7 +138,6 @@ void ReadSequenceLRUAging(const vector<int>& sequence, const int num_frames,
       aging_reg[i]>>=tick_count;
     }
 
-    auto start_time = chrono::high_resolution_clock::now();
     // Check if page is already in page_list.
     bool found = false;
     for (int i = 0; i<cur_list_size; ++i) {
@@ -168,12 +168,11 @@ void ReadSequenceLRUAging(const vector<int>& sequence, const int num_frames,
     }
     page_list[min_idx] = page_num;
     aging_reg[min_idx] = 0 | 1<<(sizeof(uint) * 8 - 1);
-    auto end_time = high_resolution_clock::now();
-    auto duration = duration_cast<nanoseconds>(end_time - start_time);
-    avg_read_time += duration.count();
   }
 
-  avg_read_time/= sequence.size();
+  auto end_time = high_resolution_clock::now();
+  auto duration = duration_cast<nanoseconds>(end_time - start_time);
+  avg_run_time_ns = duration.count() / float(sequence.size());
 
   delete[] page_list;
   delete[] aging_reg;
@@ -182,7 +181,7 @@ void ReadSequenceLRUAging(const vector<int>& sequence, const int num_frames,
 
 //---------------------------- LRU Clock --------------------------------------
 void ReadSequenceLRUClock(const vector<int>& sequence, const int num_frames,
-    int& fault_count, int& avg_read_time) {
+    int& fault_count, int& avg_run_time_ns) {
   // List of pages in memory.
   int* page_list = new int[num_frames];
   // Bool array that stores the second chance status of the corresponding page
@@ -194,7 +193,7 @@ void ReadSequenceLRUClock(const vector<int>& sequence, const int num_frames,
   int clock_pointer = 0;
 
   fault_count = 0;
-  avg_read_time = 0;
+  avg_run_time_ns = 0;
   auto start_time = high_resolution_clock::now();
   for (int page_num : sequence) {
     // Search for the page in page_list.
@@ -238,7 +237,7 @@ void ReadSequenceLRUClock(const vector<int>& sequence, const int num_frames,
   }
   auto end_time = high_resolution_clock::now();
   auto duration = duration_cast<nanoseconds>(end_time - start_time);
-  avg_read_time = duration.count() / float(sequence.size());
+  avg_run_time_ns = duration.count() / float(sequence.size());
 
   delete[] page_list;
   delete[] has_second_chance;
