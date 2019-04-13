@@ -20,10 +20,12 @@ const int kValuesNumPages[] = {6, 8, 10, 12};
 
 
 void run_one_step(const int num_pages, const int num_frames,
-    float fault_count[]) {
+    float fault_count[], float read_time[]) {
   // Initialize page fault counts.
   int total_faults_counter = 0, total_faults_stack = 0, total_faults_aging= 0, 
       total_faults_clock = 0;
+  float read_time_counter = 0, read_time_stack = 0, read_time_aging= 0, 
+      read_time_clock = 0;
 
   for (int seq_no = 1; seq_no <= kNumSequencesPerStep; ++seq_no) {
     // Generate sequence.
@@ -32,22 +34,40 @@ void run_one_step(const int num_pages, const int num_frames,
       sequence[i] = rand()%num_pages + 1;
     }
     int fault_count, avg_read_time;
+    ReadSequenceLRUCounter(sequence, num_frames, fault_count, avg_read_time);
+    total_faults_counter += fault_count;
+    read_time_counter += avg_read_time;
+    ReadSequenceLRUStack(sequence, num_frames, fault_count, avg_read_time);
+    total_faults_stack += fault_count;
+    read_time_stack += avg_read_time;
+    ReadSequenceLRUAging(sequence, num_frames, fault_count, avg_read_time);
+    total_faults_aging += fault_count;
+    read_time_aging += avg_read_time;
     ReadSequenceLRUClock(sequence, num_frames, fault_count, avg_read_time);
     total_faults_clock += fault_count;
+    read_time_clock += avg_read_time;
   }
 
   fault_count[0] = total_faults_counter / float(kNumSequencesPerStep);
   fault_count[1] = total_faults_stack / float(kNumSequencesPerStep);
   fault_count[2] = total_faults_aging / float(kNumSequencesPerStep);
   fault_count[3] = total_faults_clock / float(kNumSequencesPerStep);
+
+  read_time[0] = read_time_counter / float(kNumSequencesPerStep);
+  read_time[1] = read_time_stack / float(kNumSequencesPerStep);
+  read_time[2] = read_time_aging / float(kNumSequencesPerStep);
+  read_time[3] = read_time_clock / float(kNumSequencesPerStep);
 }
 
 
 void run_tester() {
-  ofstream result_file("result.csv");
+  ofstream fault_count_file("result_fault_count.csv");
+  ofstream read_time_file("result_avg_read_time.csv");
   // Save the header.
-  result_file<<"num_page, num_frames, lru_counter, lru_stack, lru_aging,"
-             <<" lru_clock \n";
+  fault_count_file<<"num_page, num_frames, lru_counter, lru_stack,"
+                         <<"lru_aging, lru_clock \n";
+  read_time_file<<"num_page, num_frames, lru_counter, lru_stack,"
+                         <<"lru_aging, lru_clock \n";
 
   const int num_page_values = 
       sizeof(kValuesNumPages)/sizeof(kValuesNumPages[0]);
@@ -60,16 +80,17 @@ void run_tester() {
       int num_frames = kValuesNumFrames[j];
 
       float fault_count[4];
+      float read_time[4];
 
-      run_one_step(num_pages, num_frames, fault_count);
+      run_one_step(num_pages, num_frames, fault_count, read_time);
 
       // Save results.
-      result_file<<num_pages<<','<<num_frames<<','<<fault_count[0]<<','
-                 <<fault_count[1]<<','<<fault_count[2]<<','
-                 <<fault_count[3]<<endl;
-      cout<<"Fault count for num_pages = "<<kValuesNumPages[i]
-          <<" and num_frames = "<<kValuesNumFrames[j]<< " is : "<<fault_count[3]
-          <<endl;
+      fault_count_file<<num_pages<<','<<num_frames<<','<<fault_count[0]<<','
+                      <<fault_count[1]<<','<<fault_count[2]<<','
+                      <<fault_count[3]<<endl;
+      read_time_file<<num_pages<<','<<num_frames<<','<<read_time[0]<<','
+                    <<read_time[1]<<','<<read_time[2]<<','
+                    <<read_time[3]<<endl;
     }
   }
 }
@@ -78,8 +99,10 @@ void run_tester() {
 int main() {
   srand(time(0));
 
-  // vector<int> sequence({0, 4, 1, 4, 2, 4, 3, 4, 2, 4, 0, 4, 1, 4, 2, 4, 3, 4});
-  // unique_ptr<BasePageManager> page_manager = make_unique<PageManagerLRUClock>(5);
+  // vector<int> sequence({3,1,4,2,5,2,1,2,3,4});
+  // int fault_count = 0, read_time = 0;
+  // ReadSequenceLRUAging(sequence, 4, fault_count, read_time);
+  // cout<<fault_count<<endl;
 
   run_tester();
   return 0;
