@@ -69,6 +69,8 @@ void run_tester() {
   run_time_file<<"num_pages,num_frames,lru_counter,lru_stack,"
                          <<"lru_aging,lru_clock\n";
 
+  // Get the number of page number values and frame number values for which
+  // the test is to be done.
   const int num_page_values = 
       sizeof(kValuesNumPages)/sizeof(kValuesNumPages[0]);
   const int num_frame_values = 
@@ -95,15 +97,67 @@ void run_tester() {
   }
 }
 
+void run_test_corner_case() {
+  int num_pages = 6, num_frames = 4;
+  // Test for direct sequence.
+  cout<<"\nCorner case: Direct sequence\n";
+  cout<<"num_pages = "<<num_pages<<" num_frames = "<<num_frames<<endl;
+  // Generate the sequence.
+  vector<int> sequence;
+  for (int i = 0; i<=kSequenceLength ; ++i) {
+    sequence.push_back(i%num_pages + 1);
+  }
+  int fault_count, avg_run_time_ns;
+  ReadSequenceLRUCounter(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Counter: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUStack(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Stack: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUAging(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Aging: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUClock(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Clock: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+
+  // Test for direct inverted sequence.
+  cout<<"\nCorner case: Direct inverted sequence\n";
+  cout<<"num_pages = "<<num_pages<<" num_frames = "<<num_frames<<endl;
+  // Generate the sequence.
+  sequence.clear();
+  int page_num = 1;
+  bool increment_flag = true;
+  for (int i = 0; i<=kSequenceLength ; ++i) {
+    sequence.push_back(page_num);
+    if (page_num == num_pages) {
+      increment_flag = false;
+    } 
+    if (page_num == 1) {
+      increment_flag = true;
+    }
+    page_num += increment_flag ? 1  : -1;
+  }
+  ReadSequenceLRUCounter(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Counter: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUStack(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Stack: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUAging(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Aging: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+  ReadSequenceLRUClock(sequence, num_frames, fault_count, avg_run_time_ns); 
+  cout<<"LRU Clock: fault_count = "<<fault_count<<", avg_run_time_ns = "
+      << avg_run_time_ns<<endl;
+}
+
 
 int main() {
   srand(time(0));
 
-  // vector<int> sequence({3,1,4,2,5,2,1,2,3,4});
-  // int fault_count = 0, run_time = 0;
-  // ReadSequenceLRUAging(sequence, 4, fault_count, run_time);
-  // cout<<fault_count<<endl;
-
-  run_tester();
+  // run_tester();
+  
+  run_test_corner_case();
   return 0;
 }
