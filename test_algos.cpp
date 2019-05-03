@@ -104,7 +104,7 @@ void run_test_corner_case() {
   cout<<"num_pages = "<<num_pages<<" num_frames = "<<num_frames<<endl;
   // Generate the sequence.
   vector<int> sequence;
-  for (int i = 0; i<=kSequenceLength ; ++i) {
+  for (int i = 0; i<kSequenceLength ; ++i) {
     sequence.push_back(i%num_pages + 1);
   }
   int fault_count, avg_run_time_ns;
@@ -128,7 +128,7 @@ void run_test_corner_case() {
   sequence.clear();
   int page_num = 1;
   bool increment_flag = true;
-  for (int i = 0; i<=kSequenceLength ; ++i) {
+  for (int i = 0; i<kSequenceLength ; ++i) {
     sequence.push_back(page_num);
     if (page_num == num_pages) {
       increment_flag = false;
@@ -156,7 +156,7 @@ void run_test_corner_case() {
 int main() {
   srand(time(0));
 
-  // run_tester();
+  run_tester();
   
   run_test_corner_case();
   return 0;

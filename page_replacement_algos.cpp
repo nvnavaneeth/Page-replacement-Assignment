@@ -8,6 +8,87 @@
 using namespace std;
 using namespace chrono;
 
+//-------------------------- Linked List -------------------------------------
+
+struct Node {
+  int data;
+  Node *prev;
+  Node *next;
+};
+
+class List {
+  public:
+  Node* Head = NULL;
+  Node* Rear = NULL;
+  int size = 0;
+
+  void InsertFront(int data){
+    Node* node = new Node{data, NULL, NULL};
+    if (Head == NULL) {
+      // First element.
+      Head = Rear = node;
+    } else {
+      node->next = Head;
+      Head->prev = node;
+      Head = node;
+    }
+
+    size++;
+  }
+
+  void DeleteRear() {
+    if (Head == NULL)
+      return ;
+
+    Node* temp_node = Rear;
+    if (Head == Rear) {
+      // Last element.
+      Head = Rear = NULL;
+    } else {
+      Rear = Rear->prev;
+      Rear->next = NULL;
+    }
+    delete temp_node;
+    size--;
+  }
+
+  // Reinserts the node with given data to the front. Return true if data
+  // was found, false if not found.
+  bool ReinsertFront(int data) {
+    if (Head == NULL)
+      return false;
+
+    Node* cur = Head;
+    while(cur != NULL) {
+      if (cur->data == data) {
+        Node* prev_node = cur->prev;
+        Node* next_node = cur->next;
+
+        if (!prev_node){
+          // Already head, nothing to do.
+          return true;
+        }
+        // Remove cur node from its place.
+        prev_node->next = next_node;
+        if (next_node) {
+          next_node->prev = prev_node;
+        } else {
+          Rear = prev_node;
+        }
+        // Add it to the front.
+        cur->next = Head;
+        cur->prev = NULL;
+        Head->prev = cur;
+        Head = cur;
+        return true;
+      }
+      cur = cur->next;
+    }
+    // Not found.
+    return false;
+  }
+};
+
 //--------------------------- LRU Counter -------------------------------------
 void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
     int& fault_count, int& avg_run_time_ns) {
@@ -73,25 +154,14 @@ void ReadSequenceLRUCounter(const vector<int>& sequence, const int num_frames,
 void ReadSequenceLRUStack(const vector<int>& sequence, const int num_frames,
     int& fault_count, int& avg_run_time_ns) {
   // List of pages in memory.
-  list<int> page_list;
+  List page_list;
 
   fault_count = 0;
   avg_run_time_ns = 0;
   auto start_time = chrono::high_resolution_clock::now();
   for (int page_num : sequence) {
-    // Check if page is already in page_list.
-    bool found = false;
-    for (auto it = page_list.begin(); it != page_list.end(); ++it) {
-      if (*it == page_num) {
-        // Remove page from the position.
-        page_list.erase(it);
-        // Add it to the end.
-        page_list.push_back(page_num);
-
-        found = true;
-        break;
-      }
-    }
+    // If page already exists, reinsert it.
+    bool found = page_list.ReinsertFront(page_num);
     if (found)
       continue;
 
@@ -99,14 +169,14 @@ void ReadSequenceLRUStack(const vector<int>& sequence, const int num_frames,
     fault_count++;
 
     // If free frames are available, put the page there.
-    if (page_list.size() < num_frames) {
-      page_list.push_back(page_num);
+    if (page_list.size < num_frames) {
+      page_list.InsertFront(page_num);
       continue;
     }
 
     // Replace the page at the front.
-    page_list.pop_front();
-    page_list.push_back(page_num);
+    page_list.DeleteRear();
+    page_list.InsertFront(page_num);
   }
   auto end_time = high_resolution_clock::now();
   auto duration = duration_cast<nanoseconds>(end_time - start_time);
