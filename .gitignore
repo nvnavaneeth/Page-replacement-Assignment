@@ -12,6 +12,7 @@
 !makefile
 
 !.gitignore
+!report.pdf
 
 # Ignore the temporary test file.
 temp_test.cpp
